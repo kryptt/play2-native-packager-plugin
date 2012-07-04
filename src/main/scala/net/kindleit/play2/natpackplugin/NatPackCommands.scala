@@ -10,7 +10,7 @@ import NatPackKeys._
 trait NatPackCommands extends PlayCommands with PlayReloader {
 
   def pkgType: String
-  def pkg: TaskKey[File]
+
   def pkgTask = (baseDirectory, playPackageEverything, dependencyClasspath in Runtime, target, normalizedName, version, streams, pkgMeta) map {
     (root, packaged, dependencies, target, id, v, s, pkgMeta) ⇒
       val dist = root / "dist"
