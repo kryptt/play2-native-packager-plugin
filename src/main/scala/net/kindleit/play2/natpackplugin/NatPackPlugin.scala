@@ -23,37 +23,36 @@ object NatPackPlugin extends Plugin with debian.DebianPlugin {
     debianPackageRecommends in Debian += "git",
 
     linuxPackageMappings <++=
-      (baseDirectory, sourceDirectory, target, dependencyClasspath in Runtime, PlayProject.playPackageEverything, normalizedName, version) map {
-      (root, sd, target, dependencies, packages, name, v) ⇒
-        val pkgName = format("%s-%s", name, v)
+      (baseDirectory, target, normalizedName, PlayProject.playPackageEverything, dependencyClasspath in Runtime) map {
+      (root, target, name, pkgs, deps) ⇒
         val start = target / "start"
         writeStartFile(start)
 
-        packages.map { pkg =>
-          packageMapping(pkg -> format("/opt/%s/%s", pkgName, pkg.getName)) withPerms "0644"
+        pkgs.map { pkg ⇒
+          packageMapping(pkg -> format("/opt/%s/%s", name, pkg.getName)) withPerms "0644"
         } ++
-        dependencies.filter(_.data.ext == "jar").map { dependency ⇒
+        deps.filter(_.data.ext == "jar").map { dependency ⇒
           val depFilename = dependency.metadata.get(AttributeKey[ModuleID]("module-id")).map { module ⇒
             module.organization + "." + module.name + "-" + module.revision + ".jar"
           }.getOrElse(dependency.data.getName)
-          packageMapping(dependency.data -> format("/opt/%s/lib/%s", pkgName, depFilename)) withPerms "0644"
+          packageMapping(dependency.data -> format("/opt/%s/lib/%s", name, depFilename)) withPerms "0644"
         } ++
-        (config map { cfg ⇒ packageMapping(root / cfg -> format("/opt/%s/application.conf", pkgName)) }) ++
-          Seq(packageMapping(
-            start -> format("/opt/%s/start", pkgName),
-            root / "README" -> format("/opt/%s/README", pkgName)
-        ))
+        (config map { cfg ⇒
+          packageMapping(root / cfg -> format("/opt/%s/application.conf", name))
+        }) :+
+        packageMapping(
+          start -> format("/opt/%s/start", name),
+          root / "README" -> format("/opt/%s/README", name)
+        )
     },
 
-
-    npkg.debian <<= (packageBin in Debian, streams) map  { (deb, s) =>
+    npkg.debian <<= (packageBin in Debian, streams) map { (deb, s) ⇒
       s.log.info(format("Package %s ready", deb))
       s.log.info(format("If you wish to sign the package as well, run %s:%s", Debian, debianSign.key))
       deb
     }
 
   ) ++ SettingsHelper.makeDeploymentSettings(Debian, packageBin in Debian, "deb")
-
 
   private val config = Option(System.getProperty("config.file"))
 
@@ -62,5 +61,5 @@ object NatPackPlugin extends Plugin with debian.DebianPlugin {
 """#!/usr/bin/env sh
 
 exec java $* -cp "`dirname $0`/lib/*" %s play.core.server.NettyServer `dirname $0`
-""", config.map(_ => "-Dconfig.file=`dirname $0`/application.conf ").getOrElse("")))
+""", config.map(_ ⇒ "-Dconfig.file=`dirname $0`/application.conf ").getOrElse("")))
 }
