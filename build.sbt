@@ -12,7 +12,7 @@ name := "play2-native-packager-plugin"
 
 organization := "net.kindleit"
 
-version := "0.1-SNAPSHOT"
+version := "0.1"
 
 description := "Play2 plugin for producing native system distribution packages"
 
@@ -22,14 +22,33 @@ sbtVersion := "0.11.3"
 
 sbtPlugin := true
 
-pomExtra :=
-<licenses>
+publishMavenStyle := true
+
+publishArtifact in Test := false
+
+pomIncludeRepository := { x => false }
+
+pomExtra := (
+  <url>https://github.com/kryptt/play2-native-packager-plugin</url>
+  <licenses>
   <license>
     <name>Apache 2</name>
     <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
     <distribution>repo</distribution>
   </license>
-</licenses>
+  </licenses>
+    <scm>
+    <url>git@github.com:kryptt/play2-native-packager-plugin.git</url>
+    <connection>scm:git:git@github.com:kryptt/play2-native-packager-plugin.git</connection>
+  </scm>
+  <developers>
+    <developer>
+      <id>kryptt</id>
+      <name>Rodolfo Hansen</name>
+      <url>http://hobbes-log.blogspot.com</url>
+    </developer>
+  </developers>
+)
 
 publishTo <<= version { (v) =>
   if (v.trim.endsWith("SNAPSHOT"))
