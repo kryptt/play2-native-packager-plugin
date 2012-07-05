@@ -35,7 +35,7 @@ To fill out the appropriate packaging metadata.
 
 Debian Support
 --------------
-The final .deb package will depend on the "daemon" and "java2-runtime" packages, creating a user account and a System V
+The final *.deb* package will depend on the *daemon* and *java2-runtime* packages, creating a user account and a *SystemV*
 service for your play! application.
 
 e.g.
@@ -45,8 +45,6 @@ and
 
 will be availabe and work for you.
 
-If you choose to pass custom arguments to the play app, you are encouraged to create and update
-
-    /etc/default/myapp
-
-to contain your own environment variables and any direct options passed to the play app via the "PLAY_ARGS" variable
+If you choose to pass custom arguments to the play app, you are encouraged to create and
+update */etc/default/myapp* to contain your own environment variables and any direct options
+passed to the play app via the *PLAY_ARGS* variable
