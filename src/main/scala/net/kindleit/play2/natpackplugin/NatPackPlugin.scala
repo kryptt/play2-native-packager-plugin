@@ -9,7 +9,10 @@ import String.format
 object NatPackPlugin extends Plugin with debian.DebianPlugin {
 
   object NatPackKeys extends linux.Keys with debian.DebianKeys {
-    lazy val debian = TaskKey[File]("deb", "Create the debian package")
+    lazy val debian        = TaskKey[File]("deb", "Create the debian package")
+    lazy val debianPreInst = TaskKey[File]("debian-preinst-file", "Debian pre install maintainer script")
+    lazy val debianPreRm   = TaskKey[File]("debian-prerm-file", "Debian pre remove maintainer script")
+    lazy val debianPostRm  = TaskKey[File]("debian-postrm-file", "Debian post remove maintainer script")
   }
   private val npkg = NatPackKeys
 
@@ -26,23 +29,23 @@ object NatPackPlugin extends Plugin with debian.DebianPlugin {
       (baseDirectory, target, normalizedName, PlayProject.playPackageEverything, dependencyClasspath in Runtime) map {
       (root, target, name, pkgs, deps) ⇒
         val start = target / "start"
-        writeStartFile(start)
+        IO.write(start, startFileContent)
 
         pkgs.map { pkg ⇒
-          packageMapping(pkg -> format("/opt/%s/%s", name, pkg.getName)) withPerms "0644"
+          packageMapping(pkg -> format("/var/lib/%s/%s", name, pkg.getName)) withPerms "0644"
         } ++
         deps.filter(_.data.ext == "jar").map { dependency ⇒
           val depFilename = dependency.metadata.get(AttributeKey[ModuleID]("module-id")).map { module ⇒
             module.organization + "." + module.name + "-" + module.revision + ".jar"
           }.getOrElse(dependency.data.getName)
-          packageMapping(dependency.data -> format("/opt/%s/lib/%s", name, depFilename)) withPerms "0644"
+          packageMapping(dependency.data -> format("/var/lib/%s/lib/%s", name, depFilename)) withPerms "0644"
         } ++
         (config map { cfg ⇒
-          packageMapping(root / cfg -> format("/opt/%s/application.conf", name))
+          packageMapping(root / cfg -> format("/var/lib/%s/application.conf", name))
         }) :+
         packageMapping(
-          start -> format("/opt/%s/start", name),
-          root / "README" -> format("/opt/%s/README", name)
+          start -> format("/var/lib/%s/start", name),
+          root / "README" -> format("/var/lib/%s/README", name)
         )
     },
 
@@ -51,15 +54,14 @@ object NatPackPlugin extends Plugin with debian.DebianPlugin {
       s.log.info(format("If you wish to sign the package as well, run %s:%s", Debian, debianSign.key))
       deb
     }
+  ) ++ inConfig(Debian)(Seq(
 
-  ) ++ SettingsHelper.makeDeploymentSettings(Debian, packageBin in Debian, "deb")
+    npkg.debianPreInst    <<= (target, normalizedName) map debFile("postinst", postInstContent),
+    npkg.debianPreRm      <<= (target, normalizedName) map debFile("prerm", preRmContent),
+    npkg.debianPostRm     <<= (target, normalizedName) map debFile("postrm", postRmContent),
+    debianExplodedPackage <<= debianExplodedPackage.dependsOn(npkg.debianPreInst, npkg.debianPreRm, npkg.debianPostRm)
 
-  private val config = Option(System.getProperty("config.file"))
+  )) ++
+  SettingsHelper.makeDeploymentSettings(Debian, packageBin in Debian, "deb")
 
-  //local Play start file
-  private def writeStartFile(start: File) = IO.write(start, format(
-"""#!/usr/bin/env sh
-
-exec java $* -cp "`dirname $0`/lib/*" %s play.core.server.NettyServer `dirname $0`
-""", config.map(_ ⇒ "-Dconfig.file=`dirname $0`/application.conf ").getOrElse("")))
 }
