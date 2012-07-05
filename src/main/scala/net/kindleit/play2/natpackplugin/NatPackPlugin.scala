@@ -22,30 +22,32 @@ object NatPackPlugin extends Plugin with debian.DebianPlugin {
     packageDescription <<= description,
     packageSummary <<= description,
 
-    debianPackageDependencies in Debian += "java2-runtime",
+    debianPackageDependencies in Debian ++= Seq("java2-runtime", "daemon"),
     debianPackageRecommends in Debian += "git",
 
     linuxPackageMappings <++=
-      (baseDirectory, target, normalizedName, PlayProject.playPackageEverything, dependencyClasspath in Runtime) map {
-      (root, target, name, pkgs, deps) ⇒
+      (baseDirectory, target, normalizedName, packageSummary, PlayProject.playPackageEverything, dependencyClasspath in Runtime) map {
+      (root, target, name, desc, pkgs, deps) ⇒
         val start = target / "start"
+        val init = target / "initFile"
         IO.write(start, startFileContent)
+        IO.write(init, initFilecontent(name, desc))
 
         pkgs.map { pkg ⇒
-          packageMapping(pkg -> format("/var/lib/%s/%s", name, pkg.getName)) withPerms "0644"
+          packageMapping(pkg -> format("/var/lib/%s/%s", name, pkg.getName)) withUser(name) withGroup("adm")
         } ++
         deps.filter(_.data.ext == "jar").map { dependency ⇒
           val depFilename = dependency.metadata.get(AttributeKey[ModuleID]("module-id")).map { module ⇒
             module.organization + "." + module.name + "-" + module.revision + ".jar"
           }.getOrElse(dependency.data.getName)
-          packageMapping(dependency.data -> format("/var/lib/%s/lib/%s", name, depFilename)) withPerms "0644"
+          packageMapping(dependency.data -> format("/var/lib/%s/lib/%s", name, depFilename)) withUser(name) withGroup("adm") withPerms("0644")
         } ++
         (config map { cfg ⇒
-          packageMapping(root / cfg -> format("/var/lib/%s/application.conf", name))
-        }) :+
-        packageMapping(
-          start -> format("/var/lib/%s/start", name),
-          root / "README" -> format("/var/lib/%s/README", name)
+          packageMapping(root / cfg -> format("/var/lib/%s/application.conf", name)) withUser(name) withGroup("adm") withPerms("0644")
+        }) ++ Seq(
+          packageMapping(start -> format("/var/lib/%s/start", name)) withUser(name) withGroup("adm"),
+          packageMapping(init -> format("/etc/init.d/%s/", name)) withConfig(),
+          packageMapping(root / "README" -> format("/var/lib/%s/README", name)) withUser(name) withGroup("adm") withPerms("0644")
         )
     },
 

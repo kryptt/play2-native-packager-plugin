@@ -37,6 +37,8 @@ case "$1" in
                 %1$s
         fi
 
+        mkdir -p /var/log/%1$s
+
         # directories needed for jenkins
         # we don't do -R because it can take a long time on big installation
         chown %1$s:adm /var/lib/%1$s /var/log/%1$s
@@ -102,7 +104,7 @@ fi
 """, initName)
 
   //local Play start file
-  private[natpackplugin] def startFileContent(id: String) = format(
+  private[natpackplugin] def startFileContent = format(
 """#!/usr/bin/env sh
 
 exec java $* -cp "`dirname $0`/lib/*" %s play.core.server.NettyServer `dirname $0` $@
