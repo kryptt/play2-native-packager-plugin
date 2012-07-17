@@ -6,13 +6,13 @@ resolvers += Resolver.file("ivy2-local", new File(Path.userHome.absolutePath + "
 
 addSbtPlugin("com.typesafe" % "sbt-native-packager" % "0.4.3" withSources )
 
-addSbtPlugin("play" % "sbt-plugin" % "2.0.1")
+addSbtPlugin("play" % "sbt-plugin" % "2.0.2")
 
 name := "play2-native-packager-plugin"
 
 organization := "net.kindleit"
 
-version := "0.1"
+version := "0.2-SNAPSHOT"
 
 description := "Play2 plugin for producing native system distribution packages"
 
