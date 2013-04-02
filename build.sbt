@@ -4,9 +4,9 @@ resolvers += Resolver.url("scalasbt", new URL("http://scalasbt.artifactoryonline
 
 resolvers += Resolver.file("ivy2-local", new File(Path.userHome.absolutePath + "/.ivy2/local"))(Resolver.ivyStylePatterns)
 
-addSbtPlugin("com.typesafe" % "sbt-native-packager" % "0.4.3" withSources )
+addSbtPlugin("com.typesafe" % "sbt-native-packager" % "0.4.4" withSources )
 
-addSbtPlugin("play" % "sbt-plugin" % "2.0.2")
+addSbtPlugin("play" % "sbt-plugin" % "2.0.4")
 
 name := "play2-native-packager-plugin"
 
