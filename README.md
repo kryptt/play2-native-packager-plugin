@@ -16,7 +16,16 @@ Usage
 
 Include the plugin in your *plugins.sbt* file:
 
-    addSbtPlugin("net.kindleit" %% "play2-native-packager-plugin" % "0.1")
+    //Typesafe Repo
+    resolvers += "Typesafe repository" at "http://repo.typesafe.com/typesafe/releases/"
+
+    //sbt-native-packager repo
+    resolvers += Resolver.url("scalasbt", new URL("http://scalasbt.artifactoryonline.com/scalasbt/sbt-plugin-releases"))(Resolver.ivyStylePatterns)
+
+    //play2-native-packager-plugin snapshot repo
+    resolvers += "OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/"
+    
+    addSbtPlugin("net.kindleit" %% "play2-native-packager-plugin" % "0.2-SNAPSHOT")
 
 In your *Build.scala* file, after you import
 
@@ -25,18 +34,25 @@ In your *Build.scala* file, after you import
 
 you can fill out your project as:
 
-    val main = PlayProject(appName, appVersion, appDependencies, mainLang = SCALA).settings(natPackageSettings ++ Seq(
+    val main = PlayProject(appName, appVersion, appDependencies, mainLang = SCALA).settings(natPackSettings ++ Seq(
       maintainer := "John Doe <jdoe@example.com>",
       packageSummary := "My custom package summary",
       packageDescription := "My longer package description"
+      userName := "www-data",
+      groupName := "www-data"
     ):_*)
 
 To fill out the appropriate packaging metadata.
 
 Debian Support
 --------------
-The final *.deb* package will depend on the *daemon* and *java2-runtime* packages, creating a user account and a *SystemV*
-service for your play! application.
+
+The play command:
+
+    play deb
+
+Genrates a debian package. The final *.deb* package will depend on the *daemon* and *java2-runtime* packages,
+creating a user account and a *SystemV* service for your play! application.
 
 e.g.
     sudo /etc/init.d/myapp start
