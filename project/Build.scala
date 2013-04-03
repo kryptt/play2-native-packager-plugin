@@ -16,6 +16,13 @@ object PluginBuild extends Build {
   lazy val mainSettings: Seq[Project.Setting[_]] = Defaults.defaultSettings ++ Seq(
     pomPostProcess := { (node: Node) =>
       new RuleTransformer(FixExtra)(node)
+    },
+    publishTo <<= version { (v: String) =>
+      val nexus = "https://oss.sonatype.org/"
+      if (v.trim.endsWith("SNAPSHOT"))
+        Some("snapshots" at nexus + "content/repositories/snapshots")
+      else
+        Some("releases"  at nexus + "service/local/staging/deploy/maven2")
     })
 
   val proj = Project(id = "play2-native-packager-plugin", base = file("."), settings = mainSettings)
