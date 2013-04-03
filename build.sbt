@@ -12,7 +12,7 @@ name := "play2-native-packager-plugin"
 
 organization := "net.kindleit"
 
-version := "0.2-SNAPSHOT"
+version := "0.3-SNAPSHOT"
 
 description := "Play2 plugin for producing native system distribution packages"
 

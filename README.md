@@ -9,7 +9,7 @@ It basically assists in the configuration of the [SBT Native packager](https://g
 
 At the momment we have only worked on generating debian (.deb) packages
 
-Latest release is 0.1 which is available in Maven Central.
+This readme knows that version 0.2 is available in Maven Central.
 
 Usage
 -----
