@@ -361,7 +361,7 @@ exit 0
   private[natpackplugin] def chmod(file: File, perms: String): Unit =
     Process(Seq("chmod", perms, file.getAbsolutePath)).! match {
       case 0 ⇒ ()
-      case n ⇒ sys.error("Error running chmod " + perms + " " + file)
+      case n ⇒ sys.error("Error running chmod %s %s" format(perms, file))
     }
 
   private[natpackplugin] def debFile(filename: String, content: (String) => String)(dir: File, id: String) = {

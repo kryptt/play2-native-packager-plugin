@@ -4,7 +4,6 @@ import sbt._
 import sbt.Keys._
 import com.typesafe.sbt.packager._
 import com.typesafe.sbt.packager.Keys._
-import String.format
 
 object NatPackPlugin extends Plugin with debian.DebianPlugin {
 
@@ -18,6 +17,11 @@ object NatPackPlugin extends Plugin with debian.DebianPlugin {
   }
   private val npkg = NatPackKeys
 
+  private def depFilename(dep: Attributed[File]): String = {
+    val mid = AttributeKey[ModuleID]("module-id")
+    dep.metadata.get(mid) map { m ⇒ "%s.%s-%s.jar" format(m.organization, m.name, m.revision) } getOrElse(dep.data.getName)
+  }
+
   lazy val natPackSettings: Seq[Project.Setting[_]] = linuxSettings ++ debianSettings ++ Seq(
 
     name               in Debian <<= normalizedName,
@@ -30,30 +34,34 @@ object NatPackPlugin extends Plugin with debian.DebianPlugin {
        PlayProject.playPackageEverything, dependencyClasspath in Runtime) map {
       (root, target, name, usr, grp, desc, pkgs, deps) ⇒
         val start = target / "start"
-        val init = target / "initFile"
-        IO.write(start, startFileContent)
-        IO.write(init, initFilecontent(name, desc))
+        val init  = target / "initFile"
 
-        pkgs.map { pkg ⇒
-          packageMapping(pkg -> format("/var/lib/%s/%s", name, pkg.getName)) withUser(usr) withGroup(grp)
-        } ++
-        deps.filter(_.data.ext == "jar").map { dependency ⇒
-          val depFilename = dependency.metadata.get(AttributeKey[ModuleID]("module-id")).map { module ⇒
-            module.organization + "." + module.name + "-" + module.revision + ".jar"
-          }.getOrElse(dependency.data.getName)
-          packageMapping(dependency.data -> format("/var/lib/%s/lib/%s", name, depFilename)) withUser(usr) withGroup(grp) withPerms("0644")
-        } ++
-        (config map { cfg ⇒
-          packageMapping(root / cfg -> format("/var/lib/%s/application.conf", name)) withUser(usr) withGroup(grp) withPerms("0644")
-        }) ++ Seq(
-          packageMapping(start -> format("/var/lib/%s/start", name)) withUser(usr) withGroup(grp),
-          packageMapping(init -> format("/etc/init.d/%s", name)) withPerms("0754") withConfig(),
-          packageMapping(root / "README" -> format("/var/lib/%s/README", name)) withUser(usr) withGroup(grp) withPerms("0644")
+        IO.write(start, startFileContent)
+        IO.write(init,  initFilecontent(name, desc))
+
+        val jarFile = pkgs map { pkg ⇒
+          packageMapping(pkg -> "/var/lib/%s/%s".format(name, pkg.getName)) withUser(usr) withGroup(grp)
+        }
+
+        val jarLibs = deps filter(_.data.ext == "jar") map { dep ⇒
+          packageMapping(dep.data -> "/var/lib/%s/lib/%s".format(name, depFilename(dep))) withUser(usr) withGroup(grp) withPerms("0644")
+        }
+
+        val appConf = config map { cfg ⇒
+          packageMapping(root / cfg -> "/var/lib/%s/application.conf".format(name)) withUser(usr) withGroup(grp) withPerms("0644")
+        }
+
+        val confFiles = Seq(
+          packageMapping(start -> "/var/lib/%s/start".format(name)) withUser(usr) withGroup(grp),
+          packageMapping(init -> "/etc/init.d/%s".format(name)) withPerms("0754") withConfig(),
+          packageMapping(root / "README" -> "/var/lib/%s/README".format(name)) withUser(usr) withGroup(grp) withPerms("0644")
         )
+
+        jarFile ++ jarLibs ++ appConf ++ confFiles
     },
     npkg.debian <<= (packageBin in Debian, streams) map { (deb, s) ⇒
-      s.log.info(format("Package %s ready", deb))
-      s.log.info(format("If you wish to sign the package as well, run %s:%s", Debian, debianSign.key))
+      s.log.info("Package %s ready".format(deb))
+      s.log.info("If you wish to sign the package as well, run %s:%s".format(Debian, debianSign.key))
       deb
     }
   ) ++ inConfig(Debian)(Seq(
