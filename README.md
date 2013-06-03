@@ -11,6 +11,12 @@ At the momment we have only worked on generating debian (.deb) packages
 
 This readme knows that version 0.2 is available in Maven Central.
 
+Play versions support
+---------------------
+For `Play 2.0.X`  you may continue to use versions `0.2` and `0.2-SNAPSHOT`.<br/>
+For `Play 2.1.X`  go ahead and try out version `0.3-SNAPSHOT`
+
+
 Usage
 -----
 
@@ -25,7 +31,7 @@ Include the plugin in your *plugins.sbt* file:
     //play2-native-packager-plugin snapshot repo
     resolvers += "OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/"
     
-    addSbtPlugin("net.kindleit" %% "play2-native-packager-plugin" % "0.2-SNAPSHOT")
+    addSbtPlugin("net.kindleit" %% "play2-native-packager-plugin" % "0.3-SNAPSHOT")
 
 In your *Build.scala* file, after you import
 
