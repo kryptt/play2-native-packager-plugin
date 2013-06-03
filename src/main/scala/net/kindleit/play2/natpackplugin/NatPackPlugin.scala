@@ -1,9 +1,9 @@
 package net.kindleit.play2.natpackplugin
 
 import sbt._
-import com.typesafe.packager._
-import com.typesafe.packager.Keys._
 import sbt.Keys._
+import com.typesafe.sbt.packager._
+import com.typesafe.sbt.packager.Keys._
 import String.format
 
 object NatPackPlugin extends Plugin with debian.DebianPlugin {
@@ -19,11 +19,11 @@ object NatPackPlugin extends Plugin with debian.DebianPlugin {
   private val npkg = NatPackKeys
 
   lazy val natPackSettings: Seq[Project.Setting[_]] = linuxSettings ++ debianSettings ++ Seq(
+
     name in Debian <<= normalizedName,
     version in Debian <<= version,
-    packageDescription <<= description,
+    packageDescription in Debian <<= description,
     packageSummary <<= description,
-
     debianPackageDependencies in Debian ++= Seq("java2-runtime", "daemon"),
     debianPackageRecommends in Debian += "git",
 
@@ -48,7 +48,7 @@ object NatPackPlugin extends Plugin with debian.DebianPlugin {
           packageMapping(root / cfg -> format("/var/lib/%s/application.conf", name)) withUser(usr) withGroup(grp) withPerms("0644")
         }) ++ Seq(
           packageMapping(start -> format("/var/lib/%s/start", name)) withUser(usr) withGroup(grp),
-          packageMapping(init -> format("/etc/init.d/%s/", name)) withConfig(),
+          packageMapping(init -> format("/etc/init.d/%s", name)) withPerms("0754") withConfig(),
           packageMapping(root / "README" -> format("/var/lib/%s/README", name)) withUser(usr) withGroup(grp) withPerms("0644")
         )
     },

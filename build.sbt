@@ -4,9 +4,9 @@ resolvers += Resolver.url("scalasbt", new URL("http://scalasbt.artifactoryonline
 
 resolvers += Resolver.file("ivy2-local", new File(Path.userHome.absolutePath + "/.ivy2/local"))(Resolver.ivyStylePatterns)
 
-addSbtPlugin("com.typesafe" % "sbt-native-packager" % "0.4.4" withSources )
+addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "0.5.4")
 
-addSbtPlugin("play" % "sbt-plugin" % "2.0.4")
+addSbtPlugin("play" % "sbt-plugin" % "2.1.1")
 
 name := "play2-native-packager-plugin"
 
@@ -16,9 +16,9 @@ version := "0.3-SNAPSHOT"
 
 description := "Play2 plugin for producing native system distribution packages"
 
-scalaVersion := "2.9.1"
+scalaVersion := "2.9.2"
 
-sbtVersion := "0.11.3"
+sbtVersion := "0.12.2"
 
 sbtPlugin := true
 
