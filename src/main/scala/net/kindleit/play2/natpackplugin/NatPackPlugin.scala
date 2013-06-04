@@ -17,11 +17,6 @@ object NatPackPlugin extends Plugin with debian.DebianPlugin {
   }
   private val npkg = NatPackKeys
 
-  private def depFilename(dep: Attributed[File]): String = {
-    val mid = AttributeKey[ModuleID]("module-id")
-    dep.metadata.get(mid) map { m ⇒ "%s.%s-%s.jar" format(m.organization, m.name, m.revision) } getOrElse(dep.data.getName)
-  }
-
   lazy val natPackSettings: Seq[Project.Setting[_]] = linuxSettings ++ debianSettings ++ Seq(
 
     name               in Debian <<= normalizedName,
@@ -39,12 +34,8 @@ object NatPackPlugin extends Plugin with debian.DebianPlugin {
         IO.write(start, startFileContent)
         IO.write(init,  initFilecontent(name, desc))
 
-        val jarFile = pkgs map { pkg ⇒
-          packageMapping(pkg -> "/var/lib/%s/%s".format(name, pkg.getName)) withUser(usr) withGroup(grp)
-        }
-
-        val jarLibs = deps filter(_.data.ext == "jar") map { dep ⇒
-          packageMapping(dep.data -> "/var/lib/%s/lib/%s".format(name, depFilename(dep))) withUser(usr) withGroup(grp) withPerms("0644")
+        val jarLibs = (pkgs ++ deps.map(_.data)) filter(_.ext == "jar") map { jar ⇒
+          packageMapping(jar -> "/var/lib/%s/lib/%s".format(name, jar.getName)) withUser(usr) withGroup(grp) withPerms("0644")
         }
 
         val appConf = config map { cfg ⇒
@@ -57,7 +48,11 @@ object NatPackPlugin extends Plugin with debian.DebianPlugin {
           packageMapping(root / "README" -> "/var/lib/%s/README".format(name)) withUser(usr) withGroup(grp) withPerms("0644")
         )
 
-        jarFile ++ jarLibs ++ appConf ++ confFiles
+        val otherPkgs = pkgs filter(_.ext != "jar") map { pkg ⇒
+          packageMapping(pkg -> "/var/lib/%s/%s".format(name, pkg.getName)) withUser(usr) withGroup(grp)
+        }
+
+        jarLibs ++ appConf ++ confFiles ++ otherPkgs
     },
     npkg.debian <<= (packageBin in Debian, streams) map { (deb, s) ⇒
       s.log.info("Package %s ready".format(deb))
