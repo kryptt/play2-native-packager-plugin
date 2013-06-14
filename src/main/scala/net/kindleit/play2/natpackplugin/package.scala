@@ -368,25 +368,20 @@ exit 0
       case n ⇒ sys.error("Error running chmod %s %s" format(perms, file))
     }
 
-  private[natpackplugin] def debFile(filename: String, content: (String) => String)(dir: File, id: String) = {
-    val file = dir / "DEBIAN" / filename
-    IO.write(file, content(id))
+  private[natpackplugin] def debFile(name: String, content: => String)(dir: File) = {
+    val file = dir / "DEBIAN" / name
+    IO.write(file, content)
     chmod(file, "0755")
     file
   }
 
-  private[natpackplugin] def debFile2(filename: String, content: (String, String) => String)(dir: File, id: String, p1: String) = {
-    val file = dir / "DEBIAN" / filename
-    IO.write(file, content(id, p1))
-    chmod(file, "0755")
-    file
-  }
+  private[natpackplugin] def debFile1[T](name: String, content: (T) => String)(dir: File, t: T) =
+    debFile(name, content(t))(dir)
 
-  private[natpackplugin] def debFile3(filename: String, content: (String, String, String) => String)(dir: File, id: String, p1: String, p2: String) = {
-    val file = dir / "DEBIAN" / filename
-    IO.write(file, content(id, p1, p2))
-    chmod(file, "0755")
-    file
-  }
+  private[natpackplugin] def debFile2[T, U](name: String, content: (T, U) => String)(dir: File, t: T, u: U) =
+    debFile(name, content(t, u))(dir)
+
+  private[natpackplugin] def debFile3[T, U, V](name: String, content: (T, U, V) => String)(dir: File, t: T, u: U, v: V) =
+    debFile(name, content(t, u, v))(dir)
 
 }

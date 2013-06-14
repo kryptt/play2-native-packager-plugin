@@ -68,7 +68,7 @@ object NatPackPlugin extends Plugin with debian.DebianPlugin {
     }
   ) ++ inConfig(Debian)( Seq(
     npkg.debianPreInst        <<= (target, normalizedName, userName, groupName) map debFile3("postinst", postInstContent),
-    npkg.debianPreRm          <<= (target, normalizedName) map debFile("prerm", preRmContent),
+    npkg.debianPreRm          <<= (target, normalizedName) map debFile1("prerm", preRmContent),
     npkg.debianPostRm         <<= (target, normalizedName, userName) map debFile2("postrm", postRmContent),
     debianExplodedPackage     <<= debianExplodedPackage.dependsOn(npkg.debianPreInst, npkg.debianPreRm, npkg.debianPostRm),
     debianPackageDependencies ++= Seq("java2-runtime", "daemon"),
