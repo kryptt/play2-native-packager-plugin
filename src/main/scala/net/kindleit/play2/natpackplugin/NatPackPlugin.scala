@@ -17,12 +17,19 @@ object NatPackPlugin extends Plugin with debian.DebianPlugin {
   }
   private val npkg = NatPackKeys
 
+  import NatPackKeys._
+
   lazy val natPackSettings: Seq[Project.Setting[_]] = linuxSettings ++ debianSettings ++ Seq(
 
+    //evaluate and set defaults
     name               in Debian <<= normalizedName,
     version            in Debian <<= version,
-    packageSummary     in Debian <<= description,
-    packageDescription in Debian <<= description,
+    maintainer         in Debian <<= maintainer,
+    userName           in Debian <<= userName,
+    groupName          in Debian <<= groupName,
+    description        in Debian <<= description,
+    packageSummary     in Debian <<= description in Debian,
+    packageDescription in Debian <<= description in Debian,
 
     linuxPackageMappings <++=
       (baseDirectory, target, normalizedName, npkg.userName, npkg.groupName, packageSummary in Debian,
@@ -59,12 +66,10 @@ object NatPackPlugin extends Plugin with debian.DebianPlugin {
       s.log.info("If you wish to sign the package as well, run %s:%s".format(Debian, debianSign.key))
       deb
     }
-  ) ++ inConfig(Debian)(Seq(
-    npkg.userName             <<= normalizedName,
-    npkg.groupName            <<= npkg.userName,
-    npkg.debianPreInst        <<= (target, normalizedName) map debFile("postinst", postInstContent),
+  ) ++ inConfig(Debian)( Seq(
+    npkg.debianPreInst        <<= (target, normalizedName, userName, groupName) map debFile3("postinst", postInstContent),
     npkg.debianPreRm          <<= (target, normalizedName) map debFile("prerm", preRmContent),
-    npkg.debianPostRm         <<= (target, normalizedName) map debFile("postrm", postRmContent),
+    npkg.debianPostRm         <<= (target, normalizedName, userName) map debFile2("postrm", postRmContent),
     debianExplodedPackage     <<= debianExplodedPackage.dependsOn(npkg.debianPreInst, npkg.debianPreRm, npkg.debianPostRm),
     debianPackageDependencies ++= Seq("java2-runtime", "daemon"),
     debianPackageRecommends    += "git"
