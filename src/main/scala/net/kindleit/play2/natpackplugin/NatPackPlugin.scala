@@ -28,8 +28,10 @@ object NatPackPlugin extends Plugin with debian.DebianPlugin {
     userName           in Debian <<= userName,
     groupName          in Debian <<= groupName,
     description        in Debian <<= description,
-    packageSummary     in Debian <<= description in Debian,
-    packageDescription in Debian <<= description in Debian,
+    packageSummary     <<= description,
+    packageSummary     in Debian <<= packageSummary,
+    packageDescription <<= description,
+    packageDescription in Debian <<= packageDescription,
 
     linuxPackageMappings <++=
       (baseDirectory, target, normalizedName, npkg.userName, npkg.groupName, packageSummary in Debian,
