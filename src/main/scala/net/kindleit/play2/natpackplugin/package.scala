@@ -131,7 +131,7 @@ exec java $* -cp "`dirname $0`/lib/*" %s play.core.server.NettyServer `dirname $
 """, config.map(_ ⇒ "-Dconfig.file=`dirname $0`/application.conf ").getOrElse(""))
 
   // /etc/init.d init script
-  private[natpackplugin] def initFilecontent(id: String, desc: String) = format(
+  private[natpackplugin] def initFilecontent(id: String, desc: String, user: String) = format(
 """#!/bin/bash
 # "/etc/init.d/%1$s"
 # debian-compatible %1$s startup script.
@@ -152,7 +152,7 @@ PATH=/bin:/usr/bin:/sbin:/usr/sbin
 
 DESC="%2$s"
 NAME="%1$s"
-USER="%1$s"
+USER="%3$s"
 SCRIPTNAME="/etc/init.d/$NAME"
 PIDFILE="/var/run/%1$s.pid"
 LOGFILE="/var/log/%1$s/console.log"
@@ -375,7 +375,7 @@ case "$1" in
 esac
 
 exit 0
-""", id, desc)
+""", id, desc, user)
 
   // Common helper methods
   private[natpackplugin] def chmod(file: File, perms: String): Unit =

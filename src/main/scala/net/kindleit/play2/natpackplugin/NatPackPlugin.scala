@@ -57,7 +57,7 @@ object NatPackPlugin extends Plugin with debian.DebianPlugin {
         val init  = target / "initFile"
 
         IO.write(start, startFileContent)
-        IO.write(init,  initFilecontent(name, desc))
+        IO.write(init,  initFilecontent(name, desc, usr))
 
         val jarLibs = (pkgs ++ deps.map(_.data)) filter(_.ext == "jar") map { jar ⇒
           packageMapping(jar -> "/var/lib/%s/lib/%s".format(name, jar.getName)) withUser(usr) withGroup(grp) withPerms("0644")
