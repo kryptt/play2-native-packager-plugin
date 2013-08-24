@@ -18,3 +18,8 @@ project/plugins/project/
 .cache
 .settings
 .scalastyle
+
+#IntelliJ specific
+.idea
+.idea_modules
+

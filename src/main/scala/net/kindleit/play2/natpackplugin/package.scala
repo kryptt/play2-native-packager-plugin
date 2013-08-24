@@ -21,8 +21,6 @@ package object natpackplugin {
   import String.format
   import sbt._
 
-  private[natpackplugin] val config = Option(System.getProperty("config.file"))
-
   private[natpackplugin] def postInstContent(name: String, userName: String, groupName: String) = format(
 """#!/bin/sh
 # postinst script for %1$s
@@ -124,11 +122,11 @@ fi
 """, initName)
 
   //local Play start file
-  private[natpackplugin] def startFileContent = format(
+  private[natpackplugin] def startFileContent(config: String) = format(
 """#!/usr/bin/env sh
 
 exec java $* -cp "`dirname $0`/lib/*" %s play.core.server.NettyServer `dirname $0` $@
-""", config.map(_ ⇒ "-Dconfig.file=`dirname $0`/application.conf ").getOrElse(""))
+""", if (config.isEmpty()) "" else "-Dconfig.file=`dirname $0`/application.conf")
 
   // /etc/init.d init script
   private[natpackplugin] def initFilecontent(id: String, desc: String, user: String) = format(

@@ -24,12 +24,13 @@ import com.typesafe.sbt.packager.Keys._
 object NatPackPlugin extends Plugin with debian.DebianPlugin {
 
   object NatPackKeys extends linux.Keys with debian.DebianKeys {
-    lazy val debian        = TaskKey[File]("deb", "Create the debian package")
-    lazy val debianPreInst = TaskKey[File]("debian-preinst-file", "Debian pre install maintainer script")
-    lazy val debianPreRm   = TaskKey[File]("debian-prerm-file",   "Debian pre remove maintainer script")
-    lazy val debianPostRm  = TaskKey[File]("debian-postrm-file",  "Debian post remove maintainer script")
-    lazy val userName      = SettingKey[String]("Unix user to own the extracted package files")
-    lazy val groupName     = SettingKey[String]("Unix group to own the extracted package files")
+    lazy val debian         = TaskKey[File]("deb", "Create the debian package")
+    lazy val debianPreInst  = TaskKey[File]("debian-preinst-file", "Debian pre install maintainer script")
+    lazy val debianPreRm    = TaskKey[File]("debian-prerm-file",   "Debian pre remove maintainer script")
+    lazy val debianPostRm   = TaskKey[File]("debian-postrm-file",  "Debian post remove maintainer script")
+    lazy val userName       = SettingKey[String]("Unix user to own the extracted package files")
+    lazy val groupName      = SettingKey[String]("Unix group to own the extracted package files")
+    lazy val configFilePath = SettingKey[String]("Config file path for play application configuration [optional]")
   }
   private val npkg = NatPackKeys
 
@@ -48,23 +49,32 @@ object NatPackPlugin extends Plugin with debian.DebianPlugin {
     packageSummary     in Debian <<= packageSummary,
     packageDescription <<= description,
     packageDescription in Debian <<= packageDescription,
+    configFilePath     ~= { (cfgPath: String) =>
+      if (cfgPath.isEmpty) {
+        Option(System.getProperty("config.file")).getOrElse("")
+      } else {
+        cfgPath
+      }
+    },
 
     linuxPackageMappings <++=
       (baseDirectory, target, normalizedName, npkg.userName, npkg.groupName, packageSummary in Debian,
-       PlayProject.playPackageEverything, dependencyClasspath in Runtime) map {
-      (root, target, name, usr, grp, desc, pkgs, deps) ⇒
+       configFilePath, PlayProject.playPackageEverything, dependencyClasspath in Runtime) map {
+      (root, target, name, usr, grp, desc, cfg, pkgs, deps) ⇒
         val start = target / "start"
         val init  = target / "initFile"
 
-        IO.write(start, startFileContent)
+        IO.write(start, startFileContent(cfg))
         IO.write(init,  initFilecontent(name, desc, usr))
 
         val jarLibs = (pkgs ++ deps.map(_.data)) filter(_.ext == "jar") map { jar ⇒
           packageMapping(jar -> "/var/lib/%s/lib/%s".format(name, jar.getName)) withUser(usr) withGroup(grp) withPerms("0644")
         }
 
-        val appConf = config map { cfg ⇒
-          packageMapping(root / cfg -> "/var/lib/%s/application.conf".format(name)) withUser(usr) withGroup(grp) withPerms("0644")
+        val appConf = if (!cfg.isEmpty) {
+          Seq(packageMapping(root / cfg -> "/var/lib/%s/application.conf".format(name)) withUser(usr) withGroup(grp) withPerms("0644"))
+        } else {
+          Seq()
         }
 
         val confFiles = Seq(
