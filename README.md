@@ -47,7 +47,13 @@ you can fill out your project as:
       groupName := "www-data"
     ):_*)
 
-To fill out the appropriate packaging metadata.
+To fill out the appropriate packaging metadata. Afer version 0.5.0 the following option is also available:
+    
+    val main = PlayProject(appName, appVersion, appDependencies, mainLang = SCALA).settings(natPackSettings ++ Seq(
+      ...
+      configFilePath := "conf/appplication.conf"
+      ...
+    ):_*)
 
 Debian Support
 --------------
